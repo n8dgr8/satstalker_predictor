@@ -1,43 +1,43 @@
+import json
 from datetime import datetime
+
 from pyorbital import orbital
 
-tle_path = '/tmp/tle'
-dsm_lat = 41.6005448
-dsm_lon = -93.6091064
-dsm_alt = 266.38
-
-awesome_satellites = [
-    'noaa 15',
-    'noaa 18',
-    'noaa 19'
-]
 
 def lambda_handler(event, context):
-
-    # Save DSM Location (Lat / Lon)
-    # Save DSM altitude
-    # Get TLE file
-    # Set up Orbitals for each satellite
-    # Get now
-    # foreach Orbital, get_next_passes for 24 hours
+    tle_path = '/tmp/tle'
 
     now = datetime.utcnow()
 
-    for satellite in awesome_satellites:
-        sat_orbital = orbital.Orbital(satellite)
+    with open('./awesome_satellites.json') as file_data:
+        awesome_satellites = json.load(file_data)
 
-        print satellite
+    for satellite in awesome_satellites:
+        sat_orbital = orbital.Orbital(satellite['name'])
+
+        print '%s @ %s' % (satellite['name'], satellite['frequency'])
         print '-------'
-        next_passes = sat_orbital.get_next_passes(now, 24, dsm_lon, dsm_lat, dsm_alt)
+        next_passes = sat_orbital.get_next_passes(now, 24, event['lon'], event['lat'], event['alt'])
 
         for next_pass in next_passes:
-            (start, end, max) = next_pass
+            (start, end, maximum) = next_pass
             print '%02d:%02d:%02d' % (start.hour, start.minute, start.second)
-            print '%02d:%02d:%02d' % (max.hour, max.minute, max.second)
+            print '%02d:%02d:%02d' % (maximum.hour, maximum.minute, maximum.second)
             print '%02d:%02d:%02d' % (end.hour, end.minute, end.second)
 
 def main():
-    lambda_handler(None, None)
+    dsm_lat = 41.6005448
+    dsm_lon = -93.6091064
+    dsm_alt = 266.38
+
+    lambda_handler(
+        {
+            'lon': dsm_lon,
+            'lat': dsm_lat,
+            'alt': dsm_alt
+        },
+        None
+    )
 
 if __name__ == "__main__":
     main()
