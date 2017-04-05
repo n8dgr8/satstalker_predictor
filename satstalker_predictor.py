@@ -27,15 +27,16 @@ def lambda_handler(event, context):
         next_passes = sat_orbital.get_next_passes(now, 24, event['lon'], event['lat'], event['alt'])
 
         for next_pass in next_passes:
+            (start, end, maximum) = next_pass
 
             publish_sqs(
                 {
                     'satellite': satellite,
-                    'pass': next_pass
+                    'pass_begin': start.strftime('%Y-%m-%d %H:%M:%S'),
+                    'pass_end': end.strftime('%Y-%m-%d %H:%M:%S')
                 }
             )
 
-            (start, end, maximum) = next_pass
             print '%02d:%02d:%02d' % (start.hour, start.minute, start.second)
             print '%02d:%02d:%02d' % (maximum.hour, maximum.minute, maximum.second)
             print '%02d:%02d:%02d' % (end.hour, end.minute, end.second)
@@ -47,9 +48,9 @@ def main():
 
     lambda_handler(
         {
-            'lon': dsm_lon,
-            'lat': dsm_lat,
-            'alt': dsm_alt
+            'lon': -93.6091064,
+            'lat': 41.6005448,
+            'alt': 266.38
         },
         None
     )
