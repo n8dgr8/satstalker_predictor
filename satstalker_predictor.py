@@ -1,8 +1,15 @@
 import json
 from datetime import datetime
 
+import boto3
 from pyorbital import orbital
 
+
+def publish_sqs(message):
+    sqs = boto3.resource('sqs')
+    queue = sqs.get_queue_by_name(QueueName='satstalker_predictor')
+    response = queue.send_message(MessageBody=json.dumps(message))
+    print response
 
 def lambda_handler(event, context):
     tle_path = '/tmp/tle'
@@ -20,6 +27,14 @@ def lambda_handler(event, context):
         next_passes = sat_orbital.get_next_passes(now, 24, event['lon'], event['lat'], event['alt'])
 
         for next_pass in next_passes:
+
+            publish_sqs(
+                {
+                    'satellite': satellite,
+                    'pass': next_pass
+                }
+            )
+
             (start, end, maximum) = next_pass
             print '%02d:%02d:%02d' % (start.hour, start.minute, start.second)
             print '%02d:%02d:%02d' % (maximum.hour, maximum.minute, maximum.second)
