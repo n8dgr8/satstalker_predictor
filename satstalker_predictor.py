@@ -2,7 +2,7 @@ import json
 from datetime import datetime
 
 import boto3
-from pyorbital import orbital
+from pyorbital import orbital, tlefile
 
 
 def publish_sqs(message):
@@ -19,8 +19,10 @@ def lambda_handler(event, context):
     with open('./awesome_satellites.json') as file_data:
         awesome_satellites = json.load(file_data)
 
+    tlefile.fetch(tle_path)
+
     for satellite in awesome_satellites:
-        sat_orbital = orbital.Orbital(satellite['name'])
+        sat_orbital = orbital.Orbital(satellite['name'], tle_file=tle_path)
 
         print '%s @ %s' % (satellite['name'], satellite['frequency'])
         print '-------'
@@ -48,9 +50,9 @@ def main():
 
     lambda_handler(
         {
-            'lon': -93.6091064,
-            'lat': 41.6005448,
-            'alt': 266.38
+            'lon': dsm_lon,
+            'lat': dsm_lat,
+            'alt': dsm_alt
         },
         None
     )
